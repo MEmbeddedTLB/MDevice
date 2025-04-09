@@ -6,7 +6,7 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include <vector>
-#include "device.h" // Include base class
+#include "Devices.h" // Include base class
 
 class DeviceESP32 : public DeviceBase {
 private:

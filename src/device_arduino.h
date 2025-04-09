@@ -6,7 +6,7 @@
 #include <WiFiSSLClient.h>  // Include SSL client
 #include <ArduinoJson.h>
 #include <vector>
-#include "device.h" // Include base class
+#include "Devices.h" // Include base class
 
 class DeviceArduino : public DeviceBase {
 private:

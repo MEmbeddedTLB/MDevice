@@ -1,6 +1,6 @@
 // FILE: src/device.h
-#ifndef DEVICE_H
-#define DEVICE_H
+#ifndef DEVICES_H
+#define DEVICES_H
 
 #include <ArduinoJson.h>
 #include <vector>
@@ -51,4 +51,4 @@ public:
     typedef DeviceArduino Device;
 #endif
 
-#endif // DEVICE_H
+#endif // DEVICES_H
