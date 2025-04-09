@@ -11,9 +11,9 @@
     },
     "repository": {
       "type": "git",
-      "url": "https://github.com/MEmbeddedTLB/Device.git"
+      "url": "https://github.com/MEmbeddedTLB/Devices.git"
     },
-    "homepage": "https://github.com/MEmbeddedTLB/Device",
+    "homepage": "https://github.com/MEmbeddedTLB/Devices",
     "license": "MIT",
     "frameworks": [
       "arduino"
