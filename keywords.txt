@@ -1,0 +1,25 @@
+# Syntax Coloring Map for Device Library
+
+# Classes (KEYWORD1)
+Device	KEYWORD1
+DeviceBase	KEYWORD1
+DeviceESP32	KEYWORD1
+DeviceESP8266	KEYWORD1
+DeviceSTM32	KEYWORD1
+DeviceArduino	KEYWORD1
+
+# Methods (KEYWORD2)
+initialize	KEYWORD2
+uninitialize	KEYWORD2
+connectWiFi	KEYWORD2
+sendData	KEYWORD2
+sendDeviceConnect	KEYWORD2
+checkForCommands	KEYWORD2
+getConnectionStatus	KEYWORD2
+getPendingCommands	KEYWORD2
+
+# Structures (KEYWORD1)
+Command	KEYWORD1
+
+# Constants and Literals (LITERAL1)
+# No specific constants in this library
