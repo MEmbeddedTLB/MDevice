@@ -1,122 +1,87 @@
+// FILE: src/device_stm.cpp
 #include "device_stm.h"
 
-// Constructor
-Device::Device(const char* devId) {
+#if defined(ARDUINO_ARCH_STM32) || defined(STM32_CORE_VERSION)
+// Constructor - fixed initialization
+DeviceSTM32::DeviceSTM32(const char* devId) 
+:httpClient(wifiClient, "devica.membeddedtechlab.com", 443)
+ {
     deviceId = String(devId);
     server_url = "https://devica.membeddedtechlab.com";
-    connect_endpoint = server_url + "/api/device-connect";
-    commands_endpoint = server_url + "/api/device-commands/" + deviceId;
-    data_endpoint = server_url + "/api/device-data";
+    connect_endpoint = "/api/device-connect";
+    commands_endpoint = "/api/device-commands/" + deviceId;
+    data_endpoint = "/api/device-data";
 }
 
-// Destructor (can be empty for now)
-Device::~Device() {}
-
-void Device::initialize() {
-    // Initialize WiFi module or any additional setup
-    WiFi.mode(WIFI_STA);
-    delay(100);
+// Destructor
+DeviceSTM32::~DeviceSTM32() {
+    uninitialize();
 }
 
-// Private helper method for sending HTTP requests
-bool Device::sendHttpRequest(const String& method, const String& endpoint, const String& payload) {
-    // Extract host and path from full URL
-    String host, path;
-    int protocolIndex = endpoint.indexOf("://");
-    int pathIndex = endpoint.indexOf("/", protocolIndex + 3);
+void DeviceSTM32::initialize() {
+    if (WiFi.status() != WL_CONNECTED) return;
     
-    if (protocolIndex != -1 && pathIndex != -1) {
-        host = endpoint.substring(protocolIndex + 3, pathIndex);
-        path = endpoint.substring(pathIndex);
-    } else {
-        Serial.println("Invalid endpoint URL");
+    // WiFi is connected, nothing else to initialize at this point
+    // The HTTP client will be initialized for each request
+}
+
+bool DeviceSTM32::sendData(String type, String name, String component, int status) {
+    if (WiFi.status() != WL_CONNECTED) return false;
+    
+    doc.clear();
+    doc["type"] = type;
+    doc["deviceId"] = deviceId;
+    doc["name"] = name;
+    doc["component"] = component;
+    doc["status"] = status;
+    
+    output = "";  // Clear the string
+    serializeJson(doc, output);
+    
+    httpClient.beginSSL("devica.membeddedtechlab.com", 443);
+    httpClient.addHeader("Content-Type", "application/json");
+    int httpResponseCode = httpClient.post(data_endpoint, "application/json", output);
+    
+    if (httpResponseCode <= 0) {
+        Serial.printf("Error sending data for %s: %d\n", name.c_str(), httpResponseCode);
         return false;
-    }
-
-    // Attempt to connect to server
-    if (!client.connect(host.c_str(), 8000)) {
-        Serial.println("Connection failed");
-        return false;
-    }
-
-    // Construct HTTP request
-    client.print(method + " " + path + " HTTP/1.1\r\n");
-    client.print("Host: " + host + "\r\n");
-    
-    if (!payload.isEmpty()) {
-        client.println("Content-Type: application/json");
-        client.print("Content-Length: ");
-        client.println(payload.length());
-    }
-    
-    client.println("Connection: close");
-    client.println();
-    
-    if (!payload.isEmpty()) {
-        client.println(payload);
-    }
-
-    // Wait for response with timeout
-    unsigned long startTime = millis();
-    while (!client.available()) {
-        if (millis() - startTime > 5000) {
-            Serial.println("Request timeout");
-            client.stop();
-            return false;
-        }
-    }
-
-    // Skip HTTP headers
-    while (client.available()) {
-        String line = client.readStringUntil('\n');
-        if (line == "\r") break;
     }
 
     return true;
+    
 }
 
-bool Device::sendData(String type, String name, String component, int status) {
+bool DeviceSTM32::sendData(String type, String name, String component, String status) {
+    
     if (WiFi.status() != WL_CONNECTED) return false;
-
-    // Prepare JSON payload
+    
     doc.clear();
     doc["type"] = type;
     doc["deviceId"] = deviceId;
     doc["name"] = name;
     doc["component"] = component;
     doc["status"] = status;
+    
+    output = "";  // Clear the string
+    serializeJson(doc, output);
+    
+    httpClient.beginSSL("devica.membeddedtechlab.com", 443);
+    httpClient.addHeader("Content-Type", "application/json");
+    int httpResponseCode = httpClient.post(data_endpoint, "application/json", output);
+    
+    if (httpResponseCode <= 0) {
+        Serial.printf("Error sending data for %s: %d\n", name.c_str(), httpResponseCode);
+        return false;
+    }
 
-    // Serialize JSON
-    memset(output, 0, sizeof(output));
-    serializeJson(doc, output, sizeof(output));
-
-    // Send HTTP POST request
-    return sendHttpRequest("POST", data_endpoint, output);
+    return true;
+  
 }
 
-bool Device::sendData(String type, String name, String component, String status) {
+bool DeviceSTM32::sendData(String type, String name, String component, int status, JsonArray dataArray) {
+ 
     if (WiFi.status() != WL_CONNECTED) return false;
-
-    // Prepare JSON payload
-    doc.clear();
-    doc["type"] = type;
-    doc["deviceId"] = deviceId;
-    doc["name"] = name;
-    doc["component"] = component;
-    doc["status"] = status;
-
-    // Serialize JSON
-    memset(output, 0, sizeof(output));
-    serializeJson(doc, output, sizeof(output));
-
-    // Send HTTP POST request
-    return sendHttpRequest("POST", data_endpoint, output);
-}
-
-bool Device::sendData(String type, String name, String component, int status, JsonArray dataArray) {
-    if (WiFi.status() != WL_CONNECTED) return false;
-
-    // Prepare JSON payload
+    
     doc.clear();
     doc["type"] = type;
     doc["deviceId"] = deviceId;
@@ -124,109 +89,128 @@ bool Device::sendData(String type, String name, String component, int status, Js
     doc["component"] = component;
     doc["status"] = status;
     doc["data"] = dataArray;
+    
+    output = "";  // Clear the string
+    serializeJson(doc, output);
+    
+    httpClient.beginSSL("devica.membeddedtechlab.com", 443);
+    httpClient.addHeader("Content-Type", "application/json");
+    int httpResponseCode = httpClient.post(data_endpoint, "application/json", output);
+    
+    if (httpResponseCode <= 0) {
+        Serial.printf("Error sending data for %s: %d\n", name.c_str(), httpResponseCode);
+        return false;
+    }
 
-    // Serialize JSON
-    memset(output, 0, sizeof(output));
-    serializeJson(doc, output, sizeof(output));
-
-    // Send HTTP POST request
-    return sendHttpRequest("POST", data_endpoint, output);
+    return true;
+    
 }
 
-bool Device::connectWiFi(const char* ssid, const char* password) {
-    // Begin WiFi connection
+void DeviceSTM32::uninitialize() {
+    httpClient.stop();
+}
+
+bool DeviceSTM32::connectWiFi(const char* ssid, const char* password) {
     WiFi.begin(ssid, password);
-    
     Serial.print("Connecting to WiFi");
     
-    // Wait for connection with timeout
-    unsigned long startTime = millis();
-    while (WiFi.status() != WL_CONNECTED) {
+    // Set a timeout for WiFi connection attempts
+    int timeout = 0;
+    while (WiFi.status() != WL_CONNECTED && timeout < 20) { // 10 second timeout
         delay(500);
         Serial.print(".");
+        timeout++;
+    }
+    
+    if (WiFi.status() == WL_CONNECTED) {
+        Serial.println("\nConnected to WiFi");
+        Serial.printf("IP Address: %s\n", WiFi.localIP().toString().c_str());
+        return sendDeviceConnect();
+    } else {
+        Serial.println("\nFailed to connect to WiFi. Will retry in next loop.");
+        return false;
+    }
+}
+
+bool DeviceSTM32::sendDeviceConnect() {
+    if (WiFi.status() == WL_CONNECTED) {
+        // Prepare the JSON payload
+        doc.clear();  // Clear the existing document
+        doc["type"] = "deviceConnect";
+        doc["deviceId"] = deviceId;
         
-        // 10-second timeout
-        if (millis() - startTime > 10000) {
-            Serial.println("\nWiFi connection failed");
-            return false;
-        }
-    }
-    
-    Serial.println("\nConnected to WiFi");
-    Serial.print("IP Address: ");
-    Serial.println(WiFi.localIP());
-    
-    // Send device connection after successful WiFi connection
-    return sendDeviceConnect();
-}
+        output = "";  // Clear the string
+        serializeJson(doc, output);
 
-bool Device::sendDeviceConnect() {
-    if (WiFi.status() != WL_CONNECTED) return false;
-
-    // Prepare device connect payload
-    doc.clear();
-    doc["type"] = "deviceConnect";
-    doc["deviceId"] = deviceId;
-
-    // Serialize JSON
-    memset(output, 0, sizeof(output));
-    serializeJson(doc, output, sizeof(output));
-
-    // Send HTTP POST request
-    bool result = sendHttpRequest("POST", connect_endpoint, output);
-    
-    // Update connection status
-    isConnected = result;
-    return result;
-}
-
-void Device::checkForCommands() {
-    if (WiFi.status() != WL_CONNECTED) return;
-
-    // Send GET request to commands endpoint
-    if (sendHttpRequest("GET", commands_endpoint)) {
-        // Read response payload
-        String payload = client.readString();
-        client.stop();
-
-        // Parse JSON
-        DeserializationError error = deserializeJson(doc, payload);
-        if (!error) {
-            // Clear previous pending commands
-            pendingCommands.clear();
-
-            // Check for commands array
-            if (doc.containsKey("commands") && doc["commands"].is<JsonArray>()) {
-                JsonArray commands = doc["commands"].as<JsonArray>();
-
-                for (JsonVariant commandObj : commands) {
-                    Command newCommand;
-                    newCommand.name = commandObj["name"].as<String>();
-                    newCommand.status = commandObj["status"].as<int>();
-
-                    pendingCommands.push_back(newCommand);
-                    
-                    // Debug print
-                    Serial.println("Received command: " + newCommand.name + 
-                                 ", Status: " + String(newCommand.status));
-                }
-            }
+        // Send HTTP POST request
+        httpClient.beginSSL("devica.membeddedtechlab.com", 443);
+        httpClient.addHeader("Content-Type", "application/json");
+        int httpResponseCode = httpClient.post(connect_endpoint, "application/json", output);
+        
+        if (httpResponseCode > 0) {
+            Serial.print("Device connect HTTP Response code: ");
+            Serial.println(httpResponseCode);
+            isConnected = true;
         } else {
-            Serial.print("JSON parsing failed: ");
-            Serial.println(error.c_str());
+            Serial.print("Device connect error code: ");
+            Serial.println(httpResponseCode);
+            isConnected = false;
         }
+        
+        httpClient.stop();
+        return isConnected;
+    }
+    return false;
+}
+
+void DeviceSTM32::checkForCommands() {
+    if (WiFi.status() == WL_CONNECTED) {
+        // Create a new HTTP request for commands
+        httpClient.beginSSL("devica.membeddedtechlab.com", 443);
+        int httpResponseCode = httpClient.get(commands_endpoint);
+        
+        if (httpResponseCode > 0) {
+            String payload = httpClient.responseBody();
+            
+            StaticJsonDocument<512> commandDoc;
+            DeserializationError error = deserializeJson(commandDoc, payload);
+            
+            if (!error) {
+                // Clear previous pending commands
+                pendingCommands.clear();
+                
+                // Check if "commands" array exists in the JSON
+                if (commandDoc.containsKey("commands") && commandDoc["commands"].is<JsonArray>()) {
+                    JsonArray commands = commandDoc["commands"].as<JsonArray>();
+                    
+                    for (JsonVariant commandObj : commands) {
+                        // Create a new Command struct and add to pending commands
+                        Command newCommand;
+                        newCommand.name = commandObj["name"].as<String>();
+                        newCommand.status = commandObj["status"].as<int>();
+                        
+                        pendingCommands.push_back(newCommand);
+                        
+                        // Debug print
+                        Serial.println("Received command: " + newCommand.name + 
+                                     ", Status: " + String(newCommand.status));
+                    }
+                }
+            } else {
+                Serial.print("JSON deserialization failed: ");
+                Serial.println(error.c_str());
+            }
+        }
+        
+        httpClient.stop();
     }
 }
 
-void Device::uninitialize() {
-    // Disconnect WiFi
-    WiFi.disconnect();
-}
-
-bool Device::getConnectionStatus() const {
+bool DeviceSTM32::getConnectionStatus() const {
     return isConnected;
 }
 
-std::vector<Command>& Device::getPendingCommands() {
+std::vector<Command>& DeviceSTM32::getPendingCommands() {
     return pendingCommands;
 }
+#endif

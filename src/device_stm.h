@@ -1,60 +1,47 @@
-// FILE: src/device_stm32.h
-#ifndef DEVICE_STM32_H
-#define DEVICE_STM32_H
+// FILE: src/device_stm.h
+#ifndef DEVICE_STM_H
+#define DEVICE_STM_H
 
-#include <WiFi.h>  // STM32 WiFi library
-#include <WiFiClient.h>
+
+#if defined(ARDUINO_ARCH_STM32) || defined(STM32_CORE_VERSION)
+    #include <Arduino.h>
+  #include <WiFi.h>  
+  #include <ArduinoHttpClient.h>
+
+
 #include <ArduinoJson.h>
-#include <vector>
-#include "Devices.h" // Include base class
+#include "MDevice.h"
 
 class DeviceSTM32 : public DeviceBase {
 private:
-    // Server details
-    String server_url;
-    String deviceId;
+    StaticJsonDocument<1024> doc;
     
-    // API endpoints
+    WiFiClient wifiClient;
+    HttpClient httpClient;
+    
+    String output;  // Using String for consistency
+    String deviceId;
+    String server_url;
     String connect_endpoint;
     String commands_endpoint;
     String data_endpoint;
-    
-    StaticJsonDocument<512> doc;
-    char output[256];
-    
-    WiFiClient client;
     bool isConnected = false;
-    
-    // Vector to store pending commands
     std::vector<Command> pendingCommands;
-    
-    // Private helper method for sending HTTP requests
-    bool sendHttpRequest(const String& method, const String& endpoint, const String& payload = "");
 
 public:
-    // Constructor
-    DeviceSTM32(char* devId);
+    DeviceSTM32(const char* devId);
+    ~DeviceSTM32();
     
-    // Destructor
-    virtual ~DeviceSTM32();
-    
-    // Initialization methods
     virtual void initialize() override;
-    virtual void uninitialize() override;
-    
-    // Data sending methods
     virtual bool sendData(String type, String name, String component, int status) override;
     virtual bool sendData(String type, String name, String component, String status) override;
     virtual bool sendData(String type, String name, String component, int status, JsonArray dataArray) override;
-    
-    // Connection and command methods
+    virtual void uninitialize() override;
     virtual bool connectWiFi(const char* ssid, const char* password) override;
     virtual bool sendDeviceConnect() override;
     virtual void checkForCommands() override;
     virtual bool getConnectionStatus() const override;
-    
-    // Method to access pending commands
     virtual std::vector<Command>& getPendingCommands() override;
 };
-
-#endif // DEVICE_STM32_H
+#endif
+#endif // DEVICE_STM_H

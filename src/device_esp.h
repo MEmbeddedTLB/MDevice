@@ -1,56 +1,44 @@
-// FILE: src/device_esp32.h
-#ifndef DEVICE_ESP32_H
-#define DEVICE_ESP32_H
+// FILE: src/device_esp.h (partial fix)
+#ifndef DEVICE_ESP_H
+#define DEVICE_ESP_H
 
-#include <WiFi.h>
-#include <HTTPClient.h>
+#include <Arduino.h>
+
+#if defined(ESP32)
+#include <WiFi.h> 
+#include <HTTPClient.h> 
+
+
 #include <ArduinoJson.h>
-#include <vector>
-#include "Devices.h" // Include base class
+#include "MDevice.h"
 
 class DeviceESP32 : public DeviceBase {
 private:
-    // Server details
-    String server_url;
+    StaticJsonDocument<1024> doc;
+    HTTPClient httpClient;
+    String output;  // Changed from char[] to String to fix type issues
     String deviceId;
-    
-    // API endpoints
+    String server_url;
     String connect_endpoint;
     String commands_endpoint;
     String data_endpoint;
-    
-    DynamicJsonDocument doc;
-    String output;
-    HTTPClient httpClient;
     bool isConnected = false;
-    
-    // Vector to store pending commands
     std::vector<Command> pendingCommands;
 
 public:
-    // Constructor
-    DeviceESP32(char* devId);
+    DeviceESP32(const char* devId);
+    ~DeviceESP32();
     
-    // Destructor
-    virtual ~DeviceESP32();
-    
-    // Initialization methods
     virtual void initialize() override;
-    virtual void uninitialize() override;
-    
-    // Data sending methods
     virtual bool sendData(String type, String name, String component, int status) override;
     virtual bool sendData(String type, String name, String component, String status) override;
     virtual bool sendData(String type, String name, String component, int status, JsonArray dataArray) override;
-    
-    // Connection and command methods
+    virtual void uninitialize() override;
     virtual bool connectWiFi(const char* ssid, const char* password) override;
     virtual bool sendDeviceConnect() override;
     virtual void checkForCommands() override;
     virtual bool getConnectionStatus() const override;
-    
-    // Method to access pending commands
     virtual std::vector<Command>& getPendingCommands() override;
 };
-
-#endif // DEVICE_ESP32_H
+#endif
+#endif // DEVICE_ESP_H

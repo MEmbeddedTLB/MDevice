@@ -1,6 +1,6 @@
-// FILE: src/device.h
-#ifndef DEVICES_H
-#define DEVICES_H
+// MDevice.h
+#ifndef MDevice_H
+#define MDevice_H
 
 #include <ArduinoJson.h>
 #include <vector>
@@ -36,19 +36,23 @@ public:
     virtual std::vector<Command>& getPendingCommands() = 0;
 };
 
-// Platform detection
-#if defined(ESP8266)
-    #include "device_esp8266.h"
-    typedef DeviceESP8266 Device;
-#elif defined(ESP32)
-    #include "device_esp32.h"
+// Forward declarations of derived classes
+class DeviceESP32;
+class DeviceSTM32;
+class DeviceArduino;
+
+// Platform detection and implementation selection
+// Important: We'll include the specific device implementations AFTER we've defined the base class
+
+#if defined(ESP32)
+    #include "device_esp.h"
     typedef DeviceESP32 Device;
 #elif defined(ARDUINO_ARCH_STM32) || defined(STM32_CORE_VERSION)
-    #include "device_stm32.h"
+    #include "device_stm.h"
     typedef DeviceSTM32 Device;
 #else
     #include "device_arduino.h"
     typedef DeviceArduino Device;
 #endif
 
-#endif // DEVICES_H
+#endif // MDevice_H

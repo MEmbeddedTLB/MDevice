@@ -1,41 +1,43 @@
 {
-    "name": "Devices",
-    "version": "1.0.0",
-    "description": "A versatile WiFi device connectivity library for Arduino, ESP, and STM32 boards.",
-    "keywords": "communication, wifi, iot, connectivity",
-    "authors": {
-      "name": "MEmbedded TechLab",
-      "email": "membeddedtechlab@gmail.com",
-      "url": "https://github.com/MEmbeddedTLB",
-      "maintainer": true
-    },
-    "repository": {
-      "type": "git",
-      "url": "https://github.com/MEmbeddedTLB/Devices.git"
-    },
-    "homepage": "https://github.com/MEmbeddedTLB/Devices",
-    "license": "MIT",
-    "frameworks": [
-      "arduino"
-    ],
-    "platforms": [
-      "atmelavr",
-      "atmelsam",
-      "espressif8266",
-      "espressif32",
-      "ststm32"
-    ],
-    "headers": [
-      "Devices.h"
-    ],
-    "dependencies": {
-      "bblanchon/ArduinoJson": ">=6.0.0"
-    },
-    "export": {
-      "exclude": [
-        "tests",
-        "examples",
-        "docs"
-      ]
-    }
+  "name": "MDevice",
+  "version": "1.0.0",
+  "description": "A versatile WiFi device connectivity library for Arduino, ESP, and STM32 boards.",
+  "keywords": "communication, wifi, iot, connectivity",
+  "authors": {
+    "name": "MEmbedded TechLab",
+    "email": "membeddedtechlab@gmail.com",
+    "url": "https://github.com/MEmbeddedTLB",
+    "maintainer": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MEmbeddedTLB/Devices.git"
+  },
+  "homepage": "https://github.com/MEmbeddedTLB/Devices",
+  "license": "MIT",
+  "frameworks": [
+    "arduino"
+  ],
+  "platforms": [
+    "atmelavr",
+    "atmelsam",
+    "espressif8266",
+    "espressif32",
+    "ststm32"
+  ],
+  "headers": [
+    "MDevice.h"
+  ],
+  "dependencies": {
+    "bblanchon/ArduinoJson": ">=6.0.0",
+    "arduino-libraries/WiFiNINA": ">=1.8.0",
+    "arduino-libraries/ArduinoHttpClient": ">=0.4.0"
+  },
+  "export": {
+    "exclude": [
+      "tests",
+      "examples",
+      "docs"
+    ]
   }
+}

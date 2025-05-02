@@ -1,160 +1,130 @@
-# Device Library
+# MDevice Library for Arduino, ESP32, and STM32
+
+A platform-independent connectivity library to build IoT projects that work across different hardware with minimal code changes.
 
 ## Overview
 
-Device is a versatile WiFi-enabled device communication library designed to simplify IoT device connectivity across multiple platforms including Arduino, ESP8266, ESP32, and STM32 boards.
+The MDevice library eliminates the headache of managing different WiFi implementations across Arduino, ESP32, and STM32 boards. Write your code once and deploy it to any supported platform without changing your core application logic.
 
 ## Features
 
-- Multi-platform WiFi connectivity support
-- HTTP-based device communication
-- Easy data transmission
-- Command management
-- Secure device connection handling
-
-## Supported Platforms
-
-- Arduino
-- ESP8266
-- ESP32
-- STM32
+- **Cross-platform compatibility** - Works seamlessly on Arduino (with WiFi support), ESP32, and STM32 boards
+- **Automatic platform detection** - No need to modify your code when switching hardware
+- **Simple API** - Common interface for all your connectivity needs
+- **Command handling** - Receive and process commands from a remote server
+- **JSON support** - Send structured data with minimum effort
 
 ## Installation
 
-### Arduino IDE
-1. Download the library from GitHub
-2. In Arduino IDE, go to Sketch > Include Library > Add .ZIP Library
-3. Select the downloaded library ZIP file
+### Using Arduino Library Manager
 
-### PlatformIO
-Add to your `platformio.ini`:
-```ini
-lib_deps = 
-    Device
-```
+1. Open the Arduino IDE
+2. Go to Sketch → Include Library → Manage Libraries...
+3. Search for "MDevice"
+4. Look for "MDevice by MEmbedded TechLab"
+5. Click Install
 
-## Basic Usage
+### Manual Installation
 
-### Initialization
-```cpp
-#include <.h>
-
-// Create device with unique ID
-Device myDevice("ID");
-
-void setup() {
-    // Connect to WiFi
-    myDevice.connectWiFi("YourSSID", "YourPassword");
-}
-
-void loop() {
-    // Send sensor data
-    myDevice.sendData("temperature", "Living Room", "TempSensor", 22);
-
-    // Check for pending commands
-    myDevice.checkForCommands();
-}
-```
-
-## Key Methods
-
-### Connection
-- `connectWiFi(ssid, password)`: Connect to WiFi network
-- `sendDeviceConnect()`: Register device with server
-- `getConnectionStatus()`: Check current connection status
-
-### Data Transmission
-- `sendData(type, name, component, status)`: Send device data
-- `sendData(type, name, component, status, string)`: Send device data
-- `sendData(type, name, component, status, dataArray)`: Send data with additional array
-
-### Command Management
-- `checkForCommands()`: Retrieve pending commands
-- `getPendingCommands()`: Access list of pending commands
-
-## Configuration
-**Important Note**: Device configuration and code generation are managed through our web platform 
-
-### Code Generation Workflow
-
-1. Visit our web platform
-2. Configure your device specifications
-3. Select desired data components
-4. Generate custom device communication code
-5. Download and upload to your device
-
-### Web Platform Features
-
-- Drag-and-drop component selection
-- Real-time code preview
-- Automatic library configuration
-- Device ID management
-- Endpoint configuration
-
-
-### Server Configuration
-Modify the following in the constructor:
-```cpp
-Device myDevice("ID");
-```
-
-## Error Handling
-
-The library provides basic error logging via Serial:
-- WiFi connection failures
-- HTTP request errors
-- JSON parsing issues
+1. Download the latest release as ZIP
+2. In Arduino IDE: Sketch → Include Library → Add .ZIP Library...
+3. Select the downloaded ZIP file
 
 ## Dependencies
 
-- ArduinoJson
-- Platform-specific WiFi libraries
+This library requires:
+- ArduinoJson (6.0.0+)
+- WiFiNINA (for Arduino boards with WiFi)
+- ArduinoHttpClient (for STM32 boards)
 
-## Advanced Configuration
+These will be automatically installed if you use the Arduino Library Manager.
 
-### Custom Endpoints
-You can customize API endpoints during device initialization:
+## Quick Start
+
 ```cpp
-Device myDevice("ID");
-```
+#include <MDevice.h>
 
-## Examples
+// The Device type is automatically selected based on your platform
+Device myDevice("device123");
 
-
-### Command Processing
-```cpp
-void loop() {
-    myDevice.checkForCommands();
+void setup() {
+  Serial.begin(115200);
+  
+  // Initialize the device
+  myDevice.initialize();
+  
+  // Connect to WiFi
+  if(myDevice.connectWiFi("your_ssid", "your_password")) {
+    Serial.println("Connected to WiFi!");
     
-    // Process any received commands
-    for (auto& cmd : myDevice.getPendingCommands()) {
-        if (cmd.name == "TURN_ON_LIGHT") {
-            digitalWrite(LIGHT_PIN, HIGH);
-        }
+    // Register device with server
+    if(myDevice.sendDeviceConnect()) {
+      Serial.println("Device registered!");
     }
+  }
+}
+
+void loop() {
+  // Check for incoming commands
+  myDevice.checkForCommands();
+  
+  // Process any pending commands
+  auto& commands = myDevice.getPendingCommands();
+  for(auto& cmd : commands) {
+    Serial.print("Received command: ");
+    Serial.print(cmd.name);
+    Serial.print(" with status: ");
+    Serial.println(cmd.status);
+    
+    // Process command here...
+  }
+  commands.clear();  // Clear processed commands
+  
+  // Send some data to the server
+  myDevice.sendData("sensor", "temp_sensor", "temperature", 25);
+  
+  delay(5000);  // Wait 5 seconds before next update
 }
 ```
 
-## Troubleshooting
+## Platform-Specific Details
 
-- Ensure correct WiFi credentials
-- Check server URL and port
-- Verify device ID uniqueness
-- Monitor Serial output for diagnostic information
+The library uses conditional compilation to select the appropriate implementation:
 
+- **Arduino boards** with WiFi support (Nano 33 IoT, MKR WiFi 1010, etc.) - Uses WiFiNINA library
+- **ESP32 boards** - Uses the native ESP32 WiFi and HTTP libraries
+- **STM32 boards** - Uses ArduinoHttpClient with WiFi support
 
-## License
+## Command Structure
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+Commands received from the server follow this structure:
 
-## Support
+```cpp
+struct Command {
+  String name;   // Name of the command
+  int status;    // Status or value associated with the command
+};
+```
 
-For issues, please file a GitHub issue with:
-- Platform details
-- Library version
-- Minimal reproducible example
-- Serial monitor output
+## Data Sending Methods
 
-## Version
+The library provides multiple ways to send data:
 
-Current Version: 1.0.0
+```cpp
+// Send numeric data
+myDevice.sendData("sensor", "temp_sensor", "temperature", 25);
+
+// Send string data
+myDevice.sendData("status", "system", "message", "all systems normal");
+
+// Send complex data with array
+JsonArray dataArray = doc.createNestedArray("readings");
+dataArray.add(25);
+dataArray.add(26);
+dataArray.add(24);
+myDevice.sendData("sensor", "temp_sensor", "temperature_history", 3, dataArray);
+```
+
+## About
+
+Developed by [MEmbedded TechLab](https://github.com/MEmbeddedTLB) 
