@@ -51,6 +51,58 @@ bool DeviceSTM32::sendData(String type, String name, String component, int statu
     
 }
 
+bool DeviceSTM32::sendData(String type, String name, String component, long status) {
+    if (WiFi.status() != WL_CONNECTED) return false;
+    
+    doc.clear();
+    doc["type"] = type;
+    doc["deviceId"] = deviceId;
+    doc["name"] = name;
+    doc["component"] = component;
+    doc["status"] = status;
+    
+    output = "";  // Clear the string
+    serializeJson(doc, output);
+    
+    httpClient.beginSSL("devica.membeddedtechlab.com", 443);
+    httpClient.addHeader("Content-Type", "application/json");
+    int httpResponseCode = httpClient.post(data_endpoint, "application/json", output);
+    
+    if (httpResponseCode <= 0) {
+        Serial.printf("Error sending data for %s: %d\n", name.c_str(), httpResponseCode);
+        return false;
+    }
+
+    return true;
+    
+}
+
+bool DeviceSTM32::sendData(String type, String name, String component, double status) {
+    if (WiFi.status() != WL_CONNECTED) return false;
+    
+    doc.clear();
+    doc["type"] = type;
+    doc["deviceId"] = deviceId;
+    doc["name"] = name;
+    doc["component"] = component;
+    doc["status"] = status;
+    
+    output = "";  // Clear the string
+    serializeJson(doc, output);
+    
+    httpClient.beginSSL("devica.membeddedtechlab.com", 443);
+    httpClient.addHeader("Content-Type", "application/json");
+    int httpResponseCode = httpClient.post(data_endpoint, "application/json", output);
+    
+    if (httpResponseCode <= 0) {
+        Serial.printf("Error sending data for %s: %d\n", name.c_str(), httpResponseCode);
+        return false;
+    }
+
+    return true;
+    
+}
+
 bool DeviceSTM32::sendData(String type, String name, String component, String status) {
     
     if (WiFi.status() != WL_CONNECTED) return false;

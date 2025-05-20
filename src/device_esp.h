@@ -32,6 +32,8 @@ public:
     virtual void initialize() override;
     virtual bool sendData(String type, String name, String component, int status) override;
     virtual bool sendData(String type, String name, String component, String status) override;
+    virtual bool sendData(String type, String name, String component, double status) override;
+    virtual bool sendData(String type, String name, String component, long status) override;
     virtual bool sendData(String type, String name, String component, int status, JsonArray dataArray) override;
     virtual void uninitialize() override;
     virtual bool connectWiFi(const char* ssid, const char* password) override;

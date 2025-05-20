@@ -25,6 +25,8 @@ public:
     virtual bool sendData(String type, String name, String component, int status) = 0;
     virtual bool sendData(String type, String name, String component, String status) = 0;
     virtual bool sendData(String type, String name, String component, int status, JsonArray dataArray) = 0;
+    virtual bool sendData(String type, String name, String component, double status) = 0;
+    virtual bool sendData(String type, String name, String component, long status) = 0;
     
     // Connection and command methods
     virtual bool connectWiFi(const char* ssid, const char* password) = 0;

@@ -142,6 +142,50 @@ bool DeviceArduino::sendData(String type, String name, String component, int sta
     return true;
 }
 
+bool DeviceArduino::sendData(String type, String name, String component, long status) {
+    doc.clear();
+    doc["type"] = type;
+    doc["deviceId"] = deviceId;
+    doc["name"] = name;
+    doc["component"] = component;
+    doc["status"] = status;
+    
+    output = "";  // Clear the string
+    serializeJson(doc, output);
+    
+    String response;
+    bool success = sendHttpRequest(data_endpoint, output, response);
+    
+    if (!success) {
+        Serial.printf("Error sending data for %s\n", name.c_str());
+        return false;
+    }
+    
+    return true;
+}
+
+bool DeviceArduino::sendData(String type, String name, String component, double status) {
+    doc.clear();
+    doc["type"] = type;
+    doc["deviceId"] = deviceId;
+    doc["name"] = name;
+    doc["component"] = component;
+    doc["status"] = status;
+    
+    output = "";  // Clear the string
+    serializeJson(doc, output);
+    
+    String response;
+    bool success = sendHttpRequest(data_endpoint, output, response);
+    
+    if (!success) {
+        Serial.printf("Error sending data for %s\n", name.c_str());
+        return false;
+    }
+    
+    return true;
+}
+
 bool DeviceArduino::sendData(String type, String name, String component, String status) {
     doc.clear();
     doc["type"] = type;
